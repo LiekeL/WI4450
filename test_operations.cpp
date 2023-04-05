@@ -69,6 +69,27 @@ TEST(operations, dot) {
   EXPECT_NEAR(res, (double)n, n*std::numeric_limits<double>::epsilon());
 }
 
+TEST(operations, axpby) {
+  const int n=150;
+  double x[n], y[n];
+
+  for (int i=0; i<n; i++)
+  {
+    x[i] = double(i+1);
+    y[i] = double(n-i-1);
+  }
+
+  double a = 42.0;
+  double b = a;
+  axpby(n, a, x, b, y);
+
+  double err=0.0;
+
+  for (int i=0; i<n; i++) err = std::max(err, std::abs(y[i]-a*n));
+
+  EXPECT_NEAR(1.0+err, 1.0, std::numeric_limits<double>::epsilon());
+}
+
 TEST(operations,stencil3d_symmetric)
 {
 //  const int nx=3, ny=4, nz=5;
@@ -107,6 +128,59 @@ TEST(operations,stencil3d_symmetric)
   if (wrong_entries)
   {
     std::cout << "Your matrix (computed on a 2x2x2 grid by apply_stencil(I)) is ..."<<std::endl;
+    for (int j=0; j<n; j++)
+    {
+      for (int i=0; i<n; i++)
+      {
+        std::cout << A[i*n+j] << " ";
+      }
+      std::cout << std::endl;
+    }
+  }
+  delete [] e;
+  delete [] A;
+}
+
+TEST(operations,stencil3d_diagdom)
+{
+  const int nx=3, ny=4, nz=5;
+  const int n=nx*ny*nz;
+  double* e=new double[n];
+  for (int i=0; i<n; i++) e[i]=0.0;
+  double* A=new double[n*n];
+
+  stencil3d S;
+
+  S.nx=nx; S.ny=ny; S.nz=nz;
+  S.value_c = 9;
+  S.value_n = 1;
+  S.value_e = 2;
+  S.value_s = 1;
+  S.value_w = 2;
+  S.value_b = 1;
+  S.value_t = 1;
+
+  for (int i=0; i<n; i++)
+  {
+    e[i]=1.0;
+    if (i>0) e[i-1]=0.0;
+    apply_stencil3d(&S, e, A+i*n);
+  }
+
+  int wrong_rows=0;
+  for (int i=0; i<n; i++){
+      // if (A[i*n+j]!=A[j*n+i]) wrong_entries++;
+      double row_sum = 0.0;
+      for (int j=0; j<n; j++){
+        if (j != i) row_sum += A[i*n+j];
+      }
+      if (A[i*n+i] < row_sum) wrong_rows++;
+    }
+  EXPECT_EQ(0, wrong_rows);
+
+  if (wrong_rows)
+  {
+    std::cout << "Your matrix (computed on a 3x4x5 grid by apply_stencil(I)) is ..."<<std::endl;
     for (int j=0; j<n; j++)
     {
       for (int i=0; i<n; i++)

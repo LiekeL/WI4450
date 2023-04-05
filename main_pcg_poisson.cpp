@@ -1,5 +1,5 @@
 #include "operations.hpp"
-#include "cg_solver.hpp"
+#include "pcg_solver.hpp"
 #include "timer.hpp"
 
 #include <iostream>
@@ -103,12 +103,12 @@ int main(int argc, char* argv[])
     }
 
   // solve the linear system of equations using CG
-  int numIter, maxIter=100;
+  int numIter, maxIter=500;
   double resNorm, tol=std::sqrt(std::numeric_limits<double>::epsilon());
 
   try {
   Timer t("cg_solver");
-  cg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter, 0);
+  pcg_solver(&L, n, x, b, tol, maxIter, &resNorm, &numIter, 0);
   std::cout << std::setw(4) << numIter << "\t" << std::setw(8) << std::setprecision(4) << resNorm << std::endl;
   } catch(std::exception e)
   {
