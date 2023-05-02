@@ -4,7 +4,7 @@ CXX_FLAGS=-O2 -g -fopenmp -std=c++17
 DEFS=-DNDEBUG
 
 #default target (built when typing just "make")
-default: run_tests.x main_cg_poisson.x main_benchmarks.x
+default: run_tests.x main_cg_poisson.x main_benchmarks.x main_time_integration.x
 
 # general rule to comple a C++ source file into an object file
 %.o: %.cpp
@@ -13,12 +13,13 @@ default: run_tests.x main_cg_poisson.x main_benchmarks.x
 #define some dependencies on headers
 operations.o: operations.hpp timer.hpp
 cg_solver.o: cg_solver.hpp operations.hpp timer.hpp
-cg_poisson.o: cg_solver.hpp operations.hpp timer.hpp
+time_integration.o: time_integration.hpp operations.hpp timer.hpp
 gtest_mpi.o: gtest_mpi.hpp
 
 TEST_SOURCES=test_operations.cpp test_cg_solver.cpp
 MAIN_OBJ=main_cg_poisson.o cg_solver.o operations.o timer.o
 MAIN_BENCHM=main_benchmarks.o cg_solver.o operations.o timer.o
+MAIN_TI=main_time_integration.o time_integration.o operations.o timer.o
 
 run_tests.x: run_tests.cpp ${TEST_SOURCES} gtest_mpi.o operations.o cg_solver.o
 	${CXX} ${CXX_FLAGS} ${DEFS} -o run_tests.x $^
@@ -28,6 +29,9 @@ main_cg_poisson.x: ${MAIN_OBJ}
 
 main_benchmarks.x: ${MAIN_BENCHM} 
 	${CXX} ${CXX_FLAGS} ${DEFS} -o main_benchmarks.x $^
+
+main_time_integration.x: ${MAIN_TI} 
+	${CXX} ${CXX_FLAGS} ${DEFS} -o main_time_integration.x $^
 
 
 test: run_tests.x
